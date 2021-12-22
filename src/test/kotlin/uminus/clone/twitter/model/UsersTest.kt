@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 class UsersTest {
     @Test
     fun users() {
-        Database.connect("jdbc:h2:mem:${UUID.randomUUID()}", driver = "org.h2.Driver", user = "root", password = "")
+        Database.connect("jdbc:h2:mem:${UUID.randomUUID()}")
         transaction {
             SchemaUtils.create(Users, Followers)
 

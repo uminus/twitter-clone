@@ -2,6 +2,15 @@
 
 Twitter clone with Kotlin.
 
+## Usage
+
+```shell
+export DB_URL="jdbc:h2:mem:twitter-clone;DB_CLOSE_DELAY=-1"
+export DB_USER="USER"
+export DB_PASSWORD="PASSWORD"
+./gradlew run
+```
+
 ## Features
 
 - [ ] GraphQL API

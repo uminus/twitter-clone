@@ -5,17 +5,17 @@ import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.datetime
-import java.time.LocalDateTime
+import org.jetbrains.exposed.sql.javatime.timestamp
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.util.*
 
 
 object Tweets : UUIDTable() {
     val user = reference("user", Users)
     val text = text("text")
-    val createdAt = datetime("created_at")
-        .default(LocalDateTime.now(ZoneOffset.UTC))
+    val createdAt = timestamp("created_at")
+        .default(ZonedDateTime.now(ZoneOffset.UTC).toInstant())
 }
 
 object Likes : Table() {

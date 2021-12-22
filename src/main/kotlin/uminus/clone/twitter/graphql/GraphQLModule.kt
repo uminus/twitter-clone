@@ -4,8 +4,6 @@ import com.expediagroup.graphql.generator.SchemaGeneratorConfig
 import com.expediagroup.graphql.generator.TopLevelObject
 import com.expediagroup.graphql.generator.hooks.SchemaGeneratorHooks
 import com.expediagroup.graphql.generator.toSchema
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import graphql.ExecutionInput
 import graphql.GraphQL
 import graphql.scalars.ExtendedScalars
@@ -54,8 +52,7 @@ fun Application.graphQLModule() {
         }
 
         post("graphql") {
-            val om = ObjectMapper().registerKotlinModule()
-            val req = om.readValue(call.receive<String>(), GraphQLRequest::class.java)
+            val req = call.receive<GraphQLRequest>()
             val result = getGraphQLObject().execute(
                 ExecutionInput.newExecutionInput()
                     .operationName(req.operationName)
@@ -64,9 +61,9 @@ fun Application.graphQLModule() {
                     .build()
             )
             if (result.isDataPresent) {
-                call.respondText(om.writeValueAsString(result.toSpecification()))
+                call.respond(HttpStatusCode.OK, result.toSpecification())
             } else {
-                call.respond(HttpStatusCode.BadRequest, om.writeValueAsString(result.errors))
+                call.respond(HttpStatusCode.BadRequest, result.errors)
             }
         }
     }
