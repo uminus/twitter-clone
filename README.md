@@ -4,6 +4,7 @@ Twitter clone with Kotlin.
 
 ## Features
 
+- [ ] GraphQL API
 - [ ] Signup, Login, Logout
 - [ ] Tweet
 - [ ] Follow users
@@ -16,19 +17,18 @@ Twitter clone with Kotlin.
 ```mermaid
 classDiagram
   class User {
-    +String id
+    +String name
     +String profile
-    +Array~Tweet~ tweets
-    +Array~User~ followers
   }
   class Tweet {
-    +String: id
-    +Array~User~ likes
+    +User user
+    +String text
+    +Datetime~UTC~ created_at
   }
 
   User --> Tweet: tweet
-  Tweet --> User: like
-  User --> User: follower
+  Tweet --> User: Likes
+  User --> User: Folowers
 ```
 
 ## APIs
