@@ -13,6 +13,7 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import uminus.clone.twitter.verify
 import java.time.ZonedDateTime
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -53,11 +54,24 @@ fun Application.graphQLModule() {
 
         post("graphql") {
             val req = call.receive<GraphQLRequest>()
+
+            val context = if (context.request.authorization() != null) {
+                try {
+                    val token = verify(context.request.authorization()!!)
+                    mapOf(Pair("user", token.claims["user"]!!.asString()))
+                } catch (e: Exception) {
+                    emptyMap()
+                }
+            } else {
+                emptyMap<String, String>()
+            }
+
             val result = getGraphQLObject().execute(
                 ExecutionInput.newExecutionInput()
                     .operationName(req.operationName)
                     .variables(req.variables ?: emptyMap())
                     .query(req.query)
+                    .localContext(context)
                     .build()
             )
             if (result.isDataPresent) {

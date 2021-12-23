@@ -1,7 +1,7 @@
 package uminus.clone.twitter.graphql
 
 import graphql.schema.idl.SchemaPrinter
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 class GraphQLModuleKtTest {
     @Test

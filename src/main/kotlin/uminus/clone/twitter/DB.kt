@@ -28,6 +28,7 @@ private fun insertDemoData() {
     fun createUser(name: String): Pair<EntityID<UUID>, User> {
         val id = Users.insert {
             it[Users.name] = name
+            it[Users.password] = "password".toByteArray()
             it[profile] = "PROFILE $name"
         } get Users.id
 

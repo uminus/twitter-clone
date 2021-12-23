@@ -9,6 +9,7 @@ import java.util.*
 
 object Users : UUIDTable() {
     val name = varchar("name", 64)
+    val password = binary("password", 64)
     val profile = text("profile").nullable()
 }
 

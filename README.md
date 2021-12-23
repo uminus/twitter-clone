@@ -14,11 +14,11 @@ export DB_PASSWORD="PASSWORD"
 ## Features
 
 - [ ] GraphQL API
-- [ ] Signup, Login, Logout
-- [ ] Tweet
-- [ ] Follow users
-- [ ] Timeline(home, users)
-- [ ] Like tweet
+  *[x] Signup, Login, Logout
+  *[ ] Tweet
+  *[ ] Follow users
+  *[ ] Timeline(home, users)
+  *[ ] Like tweet
 - [ ] Profile Page
 
 ## Models
@@ -27,6 +27,7 @@ export DB_PASSWORD="PASSWORD"
 classDiagram
   class User {
     +String name
+    +SHA256 password
     +String profile
   }
   class Tweet {
@@ -42,4 +43,17 @@ classDiagram
 
 ## APIs
 
-use GraphQL.
+```graphql
+type Mutation {
+  like(tweetId: String!): TweetData!
+  login(name: String!, password: String!): UserData!
+  logout(token: String!): Boolean!
+  signup(name: String!, password: String!): UserData!
+  tweet(text: String!): TweetData!
+}
+
+type Query {
+  tweets(limit: Int, offset: Int, tweetIds: [String!], userIds: [String!]): [TweetData!]!
+  users(id: String): [UserData!]!
+}
+```

@@ -1,4 +1,5 @@
 val ktor_version: String by project
+val jwt_version: String by project
 val exposed_version: String by project
 val kotlin_version: String by project
 val graphql_version: String by project
@@ -27,6 +28,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-jackson:$ktor_version")
+    implementation("com.auth0:java-jwt:$jwt_version")
 
     implementation("com.h2database:h2:$h2_version")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
@@ -41,4 +43,15 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+
+    testImplementation(platform("org.junit:junit-bom:5.8.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("uk.org.webcompere:system-stubs-jupiter:1.2.0")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
