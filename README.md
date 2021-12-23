@@ -14,11 +14,11 @@ export DB_PASSWORD="PASSWORD"
 ## Features
 
 - [ ] GraphQL API
-  *[x] Signup, Login, Logout
-  *[ ] Tweet
-  *[ ] Follow users
-  *[ ] Timeline(home, users)
-  *[ ] Like tweet
+  * [x] Signup, Login, Logout
+  * [ ] Tweet
+  * [ ] Follow users
+  * [ ] Timeline(home, users)
+  * [ ] Like tweet
 - [ ] Profile Page
 
 ## Models
