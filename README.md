@@ -19,7 +19,11 @@ export DB_PASSWORD="PASSWORD"
   * [ ] Follow users
   * [ ] Timeline(home, users)
   * [ ] Like tweet
-- [ ] Profile Page
+
+- [ ] Frontend
+  * [x] Signup, Login, Logout
+  * [ ] Tweet
+  * [ ] Profile Page
 
 ## Models
 
@@ -47,9 +51,10 @@ classDiagram
 type Mutation {
   like(tweetId: String!): TweetData!
   login(name: String!, password: String!): UserData!
-  logout(token: String!): Boolean!
+  logout: Boolean!
   signup(name: String!, password: String!): UserData!
   tweet(text: String!): TweetData!
+  verify(token: String!): UserData!
 }
 
 type Query {

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang='en' data-theme='auto'>
+<head>
+  <meta charset='UTF-8'>
+  <title>Twitte Clone</title>
+  <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@latest/css/pico.min.css'>
+  <style>
+    body > main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: calc(100vh - 7rem);
+      padding: 1rem 0;
+    }
+
+    body > footer {
+      padding: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  const KEY_TOKEN = 'uminus.clone.twitter.token';
+
+  const state = new class State {
+    set token(str) {
+      if (str) {
+        localStorage.setItem(KEY_TOKEN, str);
+      } else {
+        localStorage.removeItem(KEY_TOKEN);
+        this.user = null;
+      }
+
+      document.getElementById('signin').style.display = this.token ? 'none' : '';
+      document.getElementById('logout').style.display = this.token ? '' : 'none';
+    }
+
+    get token() {
+      return localStorage.getItem(KEY_TOKEN);
+    }
+
+    set user(user) {
+      const main = document.getElementById('main');
+      if (!user) {
+        main.removeChild(main.firstChild);
+        main.style.display = 'none';
+        return;
+      }
+
+      delete user.token;
+      this._user = user;
+
+      main.style.display = this.token ? '' : 'none';
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(user, null, '  ');
+      main.append(pre);
+    }
+
+    get user() {
+      return this._user;
+    }
+  }();
+
+  async function gql(query, variables) {
+    const headers = {
+      'content-type': 'application/json'
+    };
+    if (state.token) {
+      headers['Authorization'] = state.token;
+    }
+
+    return fetch('http://localhost:8080/graphql',
+        // fetch('/graphql',
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({query, variables})
+        })
+        .then(res => res.json());
+  }
+
+  async function sha256(string) {
+    const utf8 = new TextEncoder().encode(string);
+    return crypto.subtle.digest('SHA-256', utf8).then((hashBuffer) => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray
+          .map((bytes) => bytes.toString(16).padStart(2, '0'))
+          .join('');
+    });
+  }
+
+  async function verifyToken() {
+    if (state.token) {
+      try {
+        const verified = await gql(
+            'mutation verify($token:String!){verify(token:$token){id name profile token}}',
+            {token: state.token}
+        );
+        state.token = verified.data.verify.token;
+        state.user = verified.data.verify;
+      } catch (e) {
+        console.error("invalid token.", e);
+        state.token = null;
+      }
+    }
+  }
+
+  verifyToken();
+
+</script>
+
+<nav class='container-fluid'>
+  <ul>
+    <li><a href='./' class='contrast' onclick='event.preventDefault()'><strong>Twitter Clone</strong></a></li>
+  </ul>
+  <ul>
+    <li><a id="logout" href="#" class="outline" style="display: none;">Logout</a></li>
+  </ul>
+</nav>
+
+<main class='container'>
+  <article id='signin' class='grid'>
+    <hgroup>
+      <h1>Twitter Clone</h1>
+
+      <h6>All life is an experiment.</h6>
+      <small>The more experiments you make the better.</small><br />
+      <cite><small>- Ralph Waldo Emerson</small></cite>
+    </hgroup>
+    <form>
+      <input type='text' name='username' placeholder='Username' aria-label='Username' autocomplete='username' required>
+      <input type='password' name='password' placeholder='Password' aria-label='Password'
+             autocomplete='current-password' required>
+      <button type='submit' class='contrast'>SignUp or Login</button>
+    </form>
+  </article>
+
+  <article id='main' style="display: none;">
+  </article>
+</main>
+
+<footer class='container-fluid'>
+  <small>
+    <a href='https://twitter.com/uminusus' class='secondary'>@uminus</a>
+    <a href='https://github.com/uminus/twitter-clone' class='secondary'>GitHub</a>
+  </small>
+</footer>
+
+<script>
+
+  document.getElementById('signin').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+
+    const passwordHash = await sha256(ev.target.password.value);
+    try {
+      let user;
+      try {
+        user = await gql(
+            'mutation login($name:String!,$password:String!){login(name:$name,password:$password){id name profile token}}',
+            {
+              name: ev.target.username.value,
+              password: passwordHash
+            })
+            .then(json => {
+              return json.data.login;
+            });
+      } catch (e) {
+        user = await gql(
+            'mutation signup($name:String!,$password:String!){signup(name:$name,password:$password){id name profile token}}',
+            {
+              name: ev.target.username.value,
+              password: passwordHash
+            })
+            .then(json => {
+              return json.data.signup;
+            });
+      }
+      console.log(user);
+      state.token = user.token
+      state.user = user;
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  document.getElementById('logout').addEventListener('click', () => {
+    gql('mutation {logout}');
+    state.token = null;
+  });
+</script>
+
+</body>
+</html>

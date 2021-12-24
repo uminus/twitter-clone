@@ -11,6 +11,7 @@ import uminus.clone.twitter.model.User
 import uminus.clone.twitter.model.Users
 import uminus.clone.twitter.token
 import java.util.*
+import uminus.clone.twitter.verify as verifyToken
 
 data class UserData(val id: String, val name: String, val profile: String?, val token: String?)
 
@@ -44,7 +45,6 @@ private fun toUserData(user: User, token: String? = null): UserData {
 class UserMutationService : Mutation {
     fun signup(name: String, password: String): UserData {
         transaction {
-
             if (User.find(Users.name eq name).count() > 0) {
                 throw Exception("TODO already exists.")
             }
@@ -57,6 +57,14 @@ class UserMutationService : Mutation {
         return login(name, password)
     }
 
+    fun verify(token: String): UserData {
+        val verified = verifyToken(token)
+        val user = transaction {
+            User.get(UUID.fromString(verified.claims["user"]!!.asString()))
+        }
+        return toUserData(user, token(user))
+    }
+
     fun login(name: String, password: String): UserData {
         val user = transaction {
             User.find { (Users.name eq name) and (Users.password eq password.toByteArray()) }
@@ -65,7 +73,11 @@ class UserMutationService : Mutation {
         return toUserData(user, token(user))
     }
 
-    fun logout(): Boolean {
+    fun logout(dfe: DataFetchingEnvironment): Boolean {
+        val context = dfe.getLocalContext<Map<String, String>>()
+        if (!context.containsKey("user")) {
+            return false
+        }
         return true
     }
 }
