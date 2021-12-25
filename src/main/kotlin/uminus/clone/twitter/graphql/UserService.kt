@@ -33,7 +33,7 @@ class UserQueryService : Query {
     }
 }
 
-private fun toUserData(user: User, token: String? = null): UserData {
+fun toUserData(user: User, token: String? = null): UserData {
     return UserData(
         user.id.toString(),
         user.name,

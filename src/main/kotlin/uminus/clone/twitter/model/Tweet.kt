@@ -15,7 +15,7 @@ object Tweets : UUIDTable() {
     val user = reference("user", Users)
     val text = text("text")
     val createdAt = timestamp("created_at")
-        .default(ZonedDateTime.now(ZoneOffset.UTC).toInstant())
+        .clientDefault { ZonedDateTime.now(ZoneOffset.UTC).toInstant() }
 }
 
 object Likes : Table() {
