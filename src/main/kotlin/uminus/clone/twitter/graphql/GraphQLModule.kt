@@ -10,6 +10,7 @@ import graphql.scalars.ExtendedScalars
 import graphql.schema.GraphQLType
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -48,9 +49,7 @@ fun getGraphQLObject(): GraphQL = GraphQL.newGraphQL(graphQLSchema).build()
 
 fun Application.graphQLModule() {
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
+        resource("/graphql", "graphql.html")
 
         post("graphql") {
             val req = call.receive<GraphQLRequest>()

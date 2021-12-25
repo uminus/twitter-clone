@@ -3,7 +3,9 @@ package uminus.clone.twitter
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.jackson.*
+import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import uminus.clone.twitter.graphql.graphQLModule
@@ -21,5 +23,8 @@ fun main() {
             jackson()
         }
         graphQLModule()
+        routing {
+            resource("/", "index.html")
+        }
     }.start(wait = true)
 }
