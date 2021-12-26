@@ -15,14 +15,16 @@ export DB_PASSWORD="PASSWORD"
 
 - [ ] GraphQL API
   * [x] Signup, Login, Logout
-  * [ ] Tweet
-  * [ ] Follow users
-  * [ ] Timeline(home, users)
+  * [x] Tweet
+  * [x] Follow users
   * [ ] Like tweet
 
 - [ ] Frontend
   * [x] Signup, Login, Logout
-  * [ ] Tweet
+  * [x] Tweet
+  * [ ] Follow users
+  * [ ] Like tweet
+  * [ ] Main Page
   * [ ] Profile Page
 
 ## Models
