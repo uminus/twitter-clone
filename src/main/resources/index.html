@@ -8,9 +8,34 @@
     body > main {
       display: flex;
       flex-direction: column;
-      justify-content: center;
       min-height: calc(100vh - 7rem);
       padding: 1rem 0;
+    }
+
+    blockquote {
+      margin: 0;
+      padding: 0.5rem 1rem;
+    }
+
+    blockquote > footer {
+      margin: 0;
+    }
+
+    #signin {
+      justify-content: center;
+    }
+
+    .tweet {
+      margin: 0;
+      padding: 0;
+    }
+
+    .tweet textarea {
+      margin: 0;
+    }
+
+    .tweet button {
+      padding: 0.32rem;
     }
 
     body > footer {
@@ -71,7 +96,7 @@
     }
 
     return fetch('http://localhost:8080/graphql',
-        // fetch('/graphql',
+        // return fetch('/graphql',
         {
           method: 'POST',
           headers,
@@ -100,7 +125,7 @@
         state.token = verified.data.verify.token;
         state.user = verified.data.verify;
       } catch (e) {
-        console.error("invalid token.", e);
+        console.error('invalid token.', e);
         state.token = null;
       }
     }
@@ -119,8 +144,8 @@
   </ul>
 </nav>
 
-<main class='container'>
-  <article id='signin' class='grid'>
+<main id="signin" class='container'>
+  <article class='grid'>
     <hgroup>
       <h1>Twitter Clone</h1>
 
@@ -135,9 +160,17 @@
       <button type='submit' class='contrast'>SignUp or Login</button>
     </form>
   </article>
+</main>
 
-  <article id='main' style="display: none;">
+<main id="main" class='container' style="display: none;">
+  <article class='tweet'>
+    <form id='tweet__submit'>
+      <label for="text"></label>
+      <textarea id="text" name="text" placeholder="What's on your mind?" required></textarea>
+      <button type="submit">Tweet</button>
+    </form>
   </article>
+  <div id="tweets"></div>
 </main>
 
 <footer class='container-fluid'>
@@ -188,6 +221,37 @@
     gql('mutation {logout}');
     state.token = null;
   });
+
+
+  document.getElementById('tweet__submit').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const res = await gql(
+        'mutation tweet($text:String!) {tweet(text: $text) {id text created_at user { name }}}',
+        {text: ev.target.text.value});
+    console.log(res);
+
+    const tweet = res.data.tweet;
+    const el = tweetFragment(tweet.id, tweet.user.name, tweet.text, tweet.created_at);
+    document.getElementById('tweets').prepend(el);
+  });
+
+  function tweetFragment(id, name, text, timestamp) {
+    const fragment = document.createDocumentFragment();
+    const article = document.createElement('article');
+    article.className = 'tweet';
+    const blockquote = document.createElement('blockquote');
+    blockquote.append(document.createTextNode(text));
+    const footer = document.createElement('footer');
+    const cite = document.createElement('cite');
+    cite.append(document.createTextNode(`- ${name} (${timestamp})`));
+
+    fragment.append(article);
+    article.append(blockquote);
+    blockquote.append(footer);
+    footer.append(cite);
+
+    return fragment;
+  }
 </script>
 
 </body>
