@@ -3,7 +3,7 @@
 <head>
   <meta charset='UTF-8'>
   <title>Twitte Clone</title>
-  <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@latest/css/pico.min.css'>
+
   <style>
     body > main {
       display: flex;
@@ -15,6 +15,7 @@
     blockquote {
       margin: 0;
       padding: 0.5rem 1rem;
+      overflow-wrap: anywhere;
     }
 
     blockquote > footer {
@@ -41,12 +42,40 @@
     body > footer {
       padding: 1rem 0;
     }
+
+    .heart {
+      width: 1rem;
+    }
   </style>
+
+  <link rel='stylesheet' href='https://unpkg.com/@picocss/pico@latest/css/pico.min.css'>
 </head>
 <body>
 
 <script>
+  function heartIcon(tweetId, isLike) {
+    const fragment = document.createDocumentFragment()
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = `like_${tweetId}`;
+    svg.classList.add("heart");
+    svg.setAttribute("viewBox", "0 0 32 29.6");
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2 c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z");
+
+    fragment.append(svg);
+    svg.append(path);
+
+
+    svg.addEventListener("click", () => {
+      onLike(tweetId);
+    });
+
+    return fragment;
+  }
+
   const KEY_TOKEN = 'uminus.clone.twitter.token';
+  const IS_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
   const state = new class State {
     set token(str) {
@@ -58,6 +87,7 @@
       }
 
       document.getElementById('signin').style.display = this.token ? 'none' : '';
+      document.getElementById('tweet__form').style.display = this.token ? '' : 'none';
       document.getElementById('logout').style.display = this.token ? '' : 'none';
     }
 
@@ -77,17 +107,23 @@
       this._user = user;
 
       main.style.display = this.token ? '' : 'none';
-      const pre = document.createElement('pre');
-      pre.textContent = JSON.stringify(user, null, '  ');
-      main.append(pre);
     }
 
     get user() {
       return this._user;
     }
+
+    set timeline(type) {
+      // uid(specific user) or home(followers) or all
+      this._timeline = type;
+    }
+
+    get timeline() {
+      return this._timeline;
+    }
   }();
 
-  async function gql(query, variables) {
+  async function gql(query, variables = {}) {
     const headers = {
       'content-type': 'application/json'
     };
@@ -95,8 +131,7 @@
       headers['Authorization'] = state.token;
     }
 
-    return fetch('http://localhost:8080/graphql',
-        // return fetch('/graphql',
+    return fetch("/graphql",
         {
           method: 'POST',
           headers,
@@ -133,6 +168,42 @@
 
   verifyToken();
 
+  async function fetchTweets(ids) {
+    let res;
+    if (ids) {
+      res = await gql('query tweets($ids: [String!]){tweets(userIds: $ids, limit: 10) {id text created_at user { id name }}}',
+          {ids});
+    } else {
+      res = await gql('query {tweets(limit: 10) {id text created_at user { id name }}}');
+    }
+    const tweets = res.data.tweets;
+
+    const fragment = document.createDocumentFragment();
+    tweets
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
+        .map(t => tweetFragment(t.id, t.user.name, t.text, t.created_at))
+        .forEach(el => fragment.append(el));
+    document.getElementById('tweets').prepend(fragment);
+  }
+
+  async function onLike(id) {
+    let res = await gql('mutation like($tweetId: String!){like(tweetId: $tweetId) {likes{id}}}', {tweetId: id});
+    if (res.data.like.likes.find(v => v.id === state.user.id)) {
+      const svg = document.getElementById(`like_${id}`)
+      svg.style.fill = "#ec407a";
+    } else {
+      const svg = document.getElementById(`like_${id}`)
+      svg.style.fill = null;
+    }
+  }
+
+  const pathname = window.location.pathname.slice(1);
+  if (IS_UUID.test(pathname)) {
+    fetchTweets([pathname]);
+  } else {
+    fetchTweets();
+  }
+
 </script>
 
 <nav class='container-fluid'>
@@ -163,7 +234,7 @@
 </main>
 
 <main id="main" class='container' style="display: none;">
-  <article class='tweet'>
+  <article id="tweet__form" class='tweet'>
     <form id='tweet__submit'>
       <label for="text"></label>
       <textarea id="text" name="text" placeholder="What's on your mind?" required></textarea>
@@ -222,7 +293,6 @@
     state.token = null;
   });
 
-
   document.getElementById('tweet__submit').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const res = await gql(
@@ -249,6 +319,8 @@
     article.append(blockquote);
     blockquote.append(footer);
     footer.append(cite);
+
+    footer.append(heartIcon(id))
 
     return fragment;
   }

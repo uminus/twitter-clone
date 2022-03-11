@@ -85,7 +85,15 @@ class TweetMutationService : Mutation {
         return transaction {
             val user = User[UUID.fromString(context["user"])]
             val tweet = Tweet[UUID.fromString(tweetId)]
-            tweet.likes = SizedCollection(tweet.likes + user)
+
+            if (tweet.likes.contains(user)) {
+                // unlike
+                tweet.likes = SizedCollection(tweet.likes - user)
+            } else  {
+                // like
+                tweet.likes = SizedCollection(tweet.likes + user)
+            }
+
             toTweetData(tweet)
         }
     }

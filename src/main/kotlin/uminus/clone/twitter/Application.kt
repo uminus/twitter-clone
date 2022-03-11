@@ -25,6 +25,7 @@ fun main() {
         graphQLModule()
         routing {
             resource("/", "index.html")
+//            resource("/*", "index.html")
         }
     }.start(wait = true)
 }

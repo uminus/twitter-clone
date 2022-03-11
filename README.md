@@ -17,13 +17,13 @@ export DB_PASSWORD="PASSWORD"
   * [x] Signup, Login, Logout
   * [x] Tweet
   * [x] Follow users
-  * [ ] Like tweet
+  * [x] Like tweet
 
 - [ ] Frontend
   * [x] Signup, Login, Logout
   * [x] Tweet
+  * [x] Like tweet
   * [ ] Follow users
-  * [ ] Like tweet
   * [ ] Main Page
   * [ ] Profile Page
 
