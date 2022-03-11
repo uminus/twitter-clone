@@ -31,6 +31,7 @@ dependencies {
     implementation("com.auth0:java-jwt:$jwt_version")
 
     implementation("com.h2database:h2:$h2_version")
+    implementation("org.postgresql:postgresql:42.3.3")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
@@ -47,6 +48,10 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.8.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("uk.org.webcompere:system-stubs-jupiter:1.2.0")
+}
+
+tasks.create("stage") {
+    dependsOn("installDist")
 }
 
 tasks.test {

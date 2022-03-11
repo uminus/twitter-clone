@@ -11,7 +11,7 @@ import java.util.*
 
 fun connect() {
     Database.connect(
-        System.getenv("DB_URL") ?: "jdbc:h2:mem:twitter-clone;DB_CLOSE_DELAY=-1",
+        System.getenv("JDBC_DATABASE_URL") ?: "jdbc:h2:mem:twitter-clone;DB_CLOSE_DELAY=-1",
         user = System.getenv("DB_USER") ?: "",
         password = System.getenv("DB_PASSWORD") ?: "",
     )

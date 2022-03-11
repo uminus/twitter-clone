@@ -1,0 +1,1 @@
+web: ./build/install/workspace/bin/workspace

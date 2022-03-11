@@ -13,7 +13,7 @@ import uminus.clone.twitter.graphql.graphQLModule
 fun main() {
     connect()
 
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
+    embeddedServer(Netty, port = (System.getenv("PORT") ?: "8080").toInt(), host = "0.0.0.0") {
         install(CORS) {
             host("*")
             header(HttpHeaders.ContentType)
