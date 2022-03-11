@@ -24,7 +24,7 @@ export DB_PASSWORD="PASSWORD"
   * [x] Tweet
   * [x] Like tweet
   * [ ] Follow users
-  * [ ] Main Page
+  * [x] Main Page
   * [ ] Profile Page
 
 ## Models

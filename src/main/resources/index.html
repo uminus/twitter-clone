@@ -2,7 +2,7 @@
 <html lang='en' data-theme='auto'>
 <head>
   <meta charset='UTF-8'>
-  <title>Twitte Clone</title>
+  <title>Twitter Clone</title>
 
   <style>
     body > main {
@@ -24,6 +24,11 @@
 
     #signin {
       justify-content: center;
+    }
+
+    .tweet__input {
+      margin: 0;
+      padding: 0;
     }
 
     .tweet {
@@ -53,39 +58,39 @@
 <body>
 
 <script>
-  function heartIcon(tweetId, isLike) {
-    const fragment = document.createDocumentFragment()
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.id = `like_${tweetId}`;
-    svg.classList.add("heart");
-    svg.setAttribute("viewBox", "0 0 32 29.6");
-
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2 c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z");
-
-    fragment.append(svg);
-    svg.append(path);
-
-
-    svg.addEventListener("click", () => {
-      onLike(tweetId);
-    });
-
-    return fragment;
-  }
-
   const KEY_TOKEN = 'uminus.clone.twitter.token';
   const IS_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+
+  window.addEventListener("hashchange", (_) => {
+    const hash = location.hash.substring(1);
+    console.log(`hash: ${hash}`);
+
+    if (IS_UUID.test(hash)) {
+      openProfileView(hash);
+    } else if (hash === "home") {
+      openHomeView();
+    } else {
+      openLoginView();
+    }
+  });
+
+  const _hash = location.hash;
+  location.hash = "";
+  location.hash = _hash;
 
   const state = new class State {
     set token(str) {
       if (str) {
         localStorage.setItem(KEY_TOKEN, str);
+        location.hash = "home";
       } else {
         localStorage.removeItem(KEY_TOKEN);
         this.user = null;
+        location.hash = "";
       }
 
+      // TODO Directly touching the DOM.
       document.getElementById('signin').style.display = this.token ? 'none' : '';
       document.getElementById('tweet__form').style.display = this.token ? '' : 'none';
       document.getElementById('logout').style.display = this.token ? '' : 'none';
@@ -106,6 +111,7 @@
       delete user.token;
       this._user = user;
 
+      // TODO Directly touching the DOM.
       main.style.display = this.token ? '' : 'none';
     }
 
@@ -113,13 +119,13 @@
       return this._user;
     }
 
-    set timeline(type) {
-      // uid(specific user) or home(followers) or all
-      this._timeline = type;
+    set tweets(tweets) {
+      this._tweets = tweets;
+      renderTweets();
     }
 
-    get timeline() {
-      return this._timeline;
+    get tweets() {
+      return this._tweets || [];
     }
   }();
 
@@ -131,6 +137,7 @@
       headers['Authorization'] = state.token;
     }
 
+    // return fetch("http://localhost:8080/graphql",
     return fetch("/graphql",
         {
           method: 'POST',
@@ -139,16 +146,9 @@
         })
         .then(res => res.json());
   }
+</script>
 
-  async function sha256(string) {
-    const utf8 = new TextEncoder().encode(string);
-    return crypto.subtle.digest('SHA-256', utf8).then((hashBuffer) => {
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray
-          .map((bytes) => bytes.toString(16).padStart(2, '0'))
-          .join('');
-    });
-  }
+<script>
 
   async function verifyToken() {
     if (state.token) {
@@ -168,6 +168,46 @@
 
   verifyToken();
 
+  // view: Login, Signup
+  function openLoginView() {
+    console.log("view: login");
+  }
+
+  // view: Home(timeline)
+  function openHomeView() {
+    console.log("view: home");
+    fetchTweets();
+  }
+
+  // view: Profile(user tweets)
+  function openProfileView(id) {
+    console.log("view: profile");
+    fetchTweets([id]);
+  }
+</script>
+
+<script>
+  function heartIcon(tweetId) {
+    const fragment = document.createDocumentFragment()
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = `like_${tweetId}`;
+    svg.classList.add("heart");
+    svg.setAttribute("viewBox", "0 0 32 29.6");
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2 c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z");
+
+    fragment.append(svg);
+    svg.append(path);
+
+
+    svg.addEventListener("click", () => {
+      onLike(tweetId);
+    });
+
+    return fragment;
+  }
+
   async function fetchTweets(ids) {
     let res;
     if (ids) {
@@ -176,12 +216,15 @@
     } else {
       res = await gql('query {tweets(limit: 10) {id text created_at user { id name }}}');
     }
-    const tweets = res.data.tweets;
+    state.tweets = res.data.tweets;
+  }
 
+  function renderTweets() {
+    document.querySelectorAll(".tweet").forEach(el => el.remove());
     const fragment = document.createDocumentFragment();
-    tweets
+    state.tweets
         .sort((a, b) => b.created_at.localeCompare(a.created_at))
-        .map(t => tweetFragment(t.id, t.user.name, t.text, t.created_at))
+        .map(t => tweetFragment(t.user.id, t.user.name, t.id, t.text, t.created_at))
         .forEach(el => fragment.append(el));
     document.getElementById('tweets').prepend(fragment);
   }
@@ -197,13 +240,32 @@
     }
   }
 
-  const pathname = window.location.pathname.slice(1);
-  if (IS_UUID.test(pathname)) {
-    fetchTweets([pathname]);
-  } else {
-    fetchTweets();
-  }
+  function tweetFragment(userId, userName, tweetId, text, timestamp) {
+    const fragment = document.createDocumentFragment();
+    const article = document.createElement('article');
+    article.id = `tweet_${tweetId}`;
+    article.className = 'tweet ';
+    const blockquote = document.createElement('blockquote');
+    blockquote.append(document.createTextNode(text));
+    const footer = document.createElement('footer');
+    const cite = document.createElement('cite');
 
+    const userProfileLink = document.createElement("a");
+    userProfileLink.href = `#${userId}`;
+    userProfileLink.append(document.createTextNode(userName));
+    cite.append(document.createTextNode(`- `));
+    cite.append(userProfileLink);
+    cite.append(document.createTextNode(` (${timestamp})`));
+
+    fragment.append(article);
+    article.append(blockquote);
+    blockquote.append(footer);
+    footer.append(cite);
+
+    footer.append(heartIcon(tweetId))
+
+    return fragment;
+  }
 </script>
 
 <nav class='container-fluid'>
@@ -234,7 +296,7 @@
 </main>
 
 <main id="main" class='container' style="display: none;">
-  <article id="tweet__form" class='tweet'>
+  <article id="tweet__form" class='tweet__input'>
     <form id='tweet__submit'>
       <label for="text"></label>
       <textarea id="text" name="text" placeholder="What's on your mind?" required></textarea>
@@ -252,6 +314,16 @@
 </footer>
 
 <script>
+  // DOM event handler
+  async function sha256(string) {
+    const utf8 = new TextEncoder().encode(string);
+    return crypto.subtle.digest('SHA-256', utf8).then((hashBuffer) => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray
+          .map((bytes) => bytes.toString(16).padStart(2, '0'))
+          .join('');
+    });
+  }
 
   document.getElementById('signin').addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -296,34 +368,12 @@
   document.getElementById('tweet__submit').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const res = await gql(
-        'mutation tweet($text:String!) {tweet(text: $text) {id text created_at user { name }}}',
+        'mutation tweet($text:String!) {tweet(text: $text) {id text created_at user { id name }}}',
         {text: ev.target.text.value});
     console.log(res);
-
-    const tweet = res.data.tweet;
-    const el = tweetFragment(tweet.id, tweet.user.name, tweet.text, tweet.created_at);
-    document.getElementById('tweets').prepend(el);
+    state.tweets = state.tweets.concat(res.data.tweet);
   });
 
-  function tweetFragment(id, name, text, timestamp) {
-    const fragment = document.createDocumentFragment();
-    const article = document.createElement('article');
-    article.className = 'tweet';
-    const blockquote = document.createElement('blockquote');
-    blockquote.append(document.createTextNode(text));
-    const footer = document.createElement('footer');
-    const cite = document.createElement('cite');
-    cite.append(document.createTextNode(`- ${name} (${timestamp})`));
-
-    fragment.append(article);
-    article.append(blockquote);
-    blockquote.append(footer);
-    footer.append(cite);
-
-    footer.append(heartIcon(id))
-
-    return fragment;
-  }
 </script>
 
 </body>
